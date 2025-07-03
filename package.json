@@ -74,7 +74,8 @@
         "rollup-plugin-postcss": "^4.0.2",
         "tailwindcss": "^4.1.11",
         "terser": "^5.29.2",
-        "uglify-js": "^3.17.4"
+        "uglify-js": "^3.17.4",
+        "socket.io": "^4.8.1"
     },
     "devDependencies": {},
     "bugs": {
