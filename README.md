@@ -48,10 +48,10 @@
 
 ```bash
 # 使用 npm
-npm install hexo-theme-builder --save
+npm install hexo-goose-builder --save
 
 # 使用 yarn
-yarn add hexo-theme-builder
+yarn add hexo-goose-builder
 ```
 
 ### 基础使用
@@ -423,20 +423,19 @@ theme_builder:
 
 ## 🤝 贡献指南
 
-欢迎贡献代码和建议！
+欢迎朋友们贡献代码和建议！
 
 ### 开发环境
-
+将此插件安装为本地npm依赖，安装到你的本地 hexo 环境以供加载：
 ```bash
 # 克隆项目
-git clone https://github.com/Travisun/hexo-theme-builder.git
-cd hexo-theme-builder
+git clone https://github.com/Travisun/hexo-goose-builder.git
+cd your-local-hexo-root
+# 通过本地安装依赖
+npm i {path_to_hexo-goose-builder}
 
-# 安装依赖
-npm install
-
-# 链接到本地测试
-npm link
+# 运行测试(查看是否出现Builder欢迎信息)
+hexo server
 ```
 
 ### 提交要求
@@ -471,9 +470,9 @@ npm link
 
 **⭐ 如果这个项目对你有帮助，请给一个 Star！**
 
-[🏠 首页](https://github.com/Travisun/hexo-theme-builder) • 
-[📚 文档](https://github.com/Travisun/hexo-theme-builder#readme) • 
-[🐛 问题](https://github.com/Travisun/hexo-theme-builder/issues) • 
-[💬 讨论](https://github.com/Travisun/hexo-theme-builder/discussions)
+[🏠 首页](https://github.com/Travisun/hexo-goose-builder) • 
+[📚 文档](https://github.com/Travisun/hexo-goose-builder#readme) • 
+[🐛 问题](https://github.com/Travisun/hexo-goose-builder/issues) • 
+[💬 讨论](https://github.com/Travisun/hexo-goose-builder/discussions)
 
 </div> 
