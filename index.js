@@ -484,13 +484,10 @@ class ThemeBuilder {
   }
 }
 
-// 导出 Hexo 插件
-module.exports = function(hexo) {
-  // 创建主题构建器实例
-  const themeBuilder = new ThemeBuilder(hexo);
+// 创建主题构建器实例
+const themeBuilder = new ThemeBuilder(hexo);
 
-  // 注册helper用于加载主题资源
-  hexo.extend.helper.register('load_theme_assets', () => {
-    return themeBuilder.getAssetTags().join('\n');
-  });
-};
+// 注册helper用于加载主题资源
+hexo.extend.helper.register('load_theme_assets', () => {
+  return themeBuilder.getAssetTags().join('\n');
+});
