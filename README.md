@@ -3,9 +3,9 @@
 > 🚀 **现代化的 Hexo 主题构建工具**  
 > 为 Hexo 博客提供完整的现代前端工程化解决方案，支持组件化开发、自动化构建和智能模式切换。
 
-[![npm version](https://img.shields.io/npm/v/hexo-theme-builder.svg)](https://www.npmjs.com/package/hexo-theme-builder)
-[![license](https://img.shields.io/npm/l/hexo-theme-builder.svg)](https://github.com/Travisun/hexo-theme-builder/blob/main/LICENSE)
-[![node version](https://img.shields.io/node/v/hexo-theme-builder.svg)](https://nodejs.org)
+[![npm version](https://img.shields.io/npm/v/hexo-goose-builder.svg)](https://www.npmjs.com/package/hexo-goose-builder)
+[![license](https://img.shields.io/npm/l/hexo-goose-builder.svg)](https://github.com/Travisun/hexo-goose-builder/blob/main/LICENSE)
+[![node version](https://img.shields.io/node/v/hexo-goose-builder.svg)](https://nodejs.org)
 
 ## ✨ 特色功能
 
@@ -87,7 +87,7 @@ hexo deploy
 ### 模块化架构
 
 ```
-hexo-theme-builder/
+hexo-goose-builder/
 ├── index.js                    # 🎯 核心控制器
 ├── lib/
 │   ├── mode-factory.js        # 🏭 模式工厂
@@ -417,9 +417,9 @@ theme_builder:
 
 ### 获取帮助
 
-- 🐛 **问题反馈**: [GitHub Issues](https://github.com/Travisun/hexo-theme-builder/issues)
-- 📖 **文档**: [项目文档](https://github.com/Travisun/hexo-theme-builder#readme)
-- 💬 **讨论**: [GitHub Discussions](https://github.com/Travisun/hexo-theme-builder/discussions)
+- 🐛 **问题反馈**: [GitHub Issues](https://github.com/Travisun/hexo-goose-builder/issues)
+- 📖 **文档**: [项目文档](https://github.com/Travisun/hexo-goose-builder#readme)
+- 💬 **讨论**: [GitHub Discussions](https://github.com/Travisun/hexo-goose-builder/discussions)
 
 ## 🤝 贡献指南
 
