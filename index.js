@@ -20,6 +20,15 @@ class ThemeBuilder {
     // 检测当前执行模式
     this.currentMode = this.detectExecutionMode();
 
+    // 创建对应的模式处理器（优先创建，用于判断是否支持）
+    this.modeHandler = ModeFactory.createHandler(this.currentMode, this);
+
+    // 如果是不支持的模式，跳过大部分初始化
+    if (!this.isSupportedMode()) {
+      // 只进行最基本的初始化
+      return;
+    }
+
     // 初始化主题配置
     this.loadThemeConfig();
 
@@ -27,9 +36,6 @@ class ThemeBuilder {
     this.jsBundler = new ComponentJSBundler(hexo);
     this.tailwindCompiler = new TailwindCompiler(hexo);
     this.banner = new Banner();
-
-    // 创建对应的模式处理器
-    this.modeHandler = ModeFactory.createHandler(this.currentMode, this);
 
     // 绑定方法到实例
     this.compileAssets = this.compileAssets.bind(this);
@@ -85,6 +91,15 @@ class ThemeBuilder {
     }
   }
 
+  // 安全的调试模式检查（处理不支持模式下可能的未初始化问题）
+  isDebugEnabledSafe() {
+    try {
+      return this.isDebugEnabled();
+    } catch (error) {
+      return false;
+    }
+  }
+
   // 检测执行模式
   detectExecutionMode() {
     const cmd = this.hexo.env.cmd;
@@ -98,6 +113,11 @@ class ThemeBuilder {
     } else {
       return cmd || 'unknown';
     }
+  }
+
+  // 检查是否为支持的模式
+  isSupportedMode() {
+    return ModeFactory.isSupportedMode(this.currentMode);
   }
 
   // 检查是否为服务器模式
@@ -144,6 +164,10 @@ class ThemeBuilder {
 
   // 显示欢迎banner
   showWelcomeBanner() {
+    // 在不支持的模式下不显示横幅
+    if (!this.isSupportedMode()) {
+      return;
+    }
     this.banner.show(this.currentMode);
   }
 
@@ -177,7 +201,7 @@ class ThemeBuilder {
       this.logInfo(`编译 TailwindCSS（${this.currentMode}模式）...`);
       const cssOutputPath = await this.tailwindCompiler.compile();
       if (cssOutputPath) {
-                  this.logSuccess(`TailwindCSS编译完成（${this.currentMode}模式）`);
+                  this.logDebug(`TailwindCSS编译完成（${this.currentMode}模式）`);
         
         // 等待文件系统同步 - 确保文件写入完成
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -186,7 +210,7 @@ class ThemeBuilder {
         this.logInfo(`编译 JS组件（${this.currentMode}模式）...`);
         const bundleResult = await this.jsBundler.bundle();
         if (bundleResult) {
-                      this.logSuccess(`JS组件打包完成（${this.currentMode}模式）`);
+                      this.logDebug(`JS组件打包完成（${this.currentMode}模式）`);
         } else {
                       this.logWarning(`JS组件打包未成功（${this.currentMode}模式），但继续执行`);
         }
@@ -347,10 +371,10 @@ class ThemeBuilder {
               // 为不同模式提供不同的完成信息
         if (this.isDeployMode()) {
           this.banner.showComplete(this.currentMode, '缓存清理');
-          this.logSuccess(`Deploy模式：编译缓存清理完成，已清理 ${clearedCount} 个文件，准备全新编译`);
+          this.logDebug(`Deploy模式：编译缓存清理完成，已清理 ${clearedCount} 个文件，准备全新编译`);
         } else {
           this.banner.showComplete(this.currentMode, '缓存清理');
-          this.logSuccess(`${this.currentMode}模式：编译缓存清理完成，已清理 ${clearedCount} 个文件`);
+          this.logDebug(`${this.currentMode}模式：编译缓存清理完成，已清理 ${clearedCount} 个文件`);
         }
       
     } catch (error) {
@@ -403,6 +427,11 @@ class ThemeBuilder {
 
   // 获取资源HTML标签
   getAssetTags() {
+    // 如果是不支持的模式，直接返回空数组
+    if (!this.isSupportedMode()) {
+      return [];
+    }
+    
     const tags = [];
     
     try {
