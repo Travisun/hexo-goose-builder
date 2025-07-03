@@ -1,8 +1,8 @@
 {
-    "name": "hexo-theme-builder",
+    "name": "hexo-goose-builder",
     "version": "1.0.0",
     "description": "An exploratory plugin that aims to introduce a theme builder for Hexo, which supports modular development in the theme building process and supports popular ESM scripts and TailwindCSS, etc.",
-    "main": "./index.js",
+    "main": "index",
     "files": [
         "index.js",
         "lib/**"

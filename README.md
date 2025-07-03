@@ -1,4 +1,4 @@
-# Hexo Theme Builder
+# Hexo Goose Builder
 
 > 🚀 **现代化的 Hexo 主题构建工具**  
 > 为 Hexo 博客提供完整的现代前端工程化解决方案，支持组件化开发、自动化构建和智能模式切换。
