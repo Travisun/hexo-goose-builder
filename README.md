@@ -179,26 +179,10 @@ graph TD
 # Hexo 站点配置
 theme_builder:
   debug: false          # 开启调试模式
-  
-# 主题配置 (themes/your-theme/_config.yml)
-theme_builder:
-  # TailwindCSS 配置
-  tailwind:
-    content:
-      - "layout/**/*.ejs"
-      - "source/**/*.js"
-    purge: true          # 生产环境启用 CSS 清理
-  
   # JavaScript 配置  
   javascript:
     minify: true         # 启用代码压缩
-    sourcemap: false     # 生产环境不生成 sourcemap
-```
-
-### 进阶配置
-
-```yaml
-theme_builder:
+    protected: true     # 启用防止用户浏览器调试
   # 文件监听配置
   watch:
     patterns:
@@ -209,39 +193,17 @@ theme_builder:
       - "**/node_modules/**"
       - "**/.*"
   
-  # 编译配置
-  compile:
-    debounce: 300        # 防抖延迟 (ms)
-    concurrent: true     # 允许并发编译
-    
-  # 输出配置
-  output:
-    css_prefix: "components.styles"
-    js_prefix: "components"
-    hash_length: 8       # 版本哈希长度
 ```
 
 ## 🎨 样式开发
 
 ### TailwindCSS 集成
 
-插件原生支持 TailwindCSS，提供完整的开发到生产流程：
-
-```css
-/* source/css/main.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* 你的自定义样式 */
-.custom-component {
-  @apply bg-blue-500 text-white p-4 rounded-lg;
-}
-```
+插件原生支持 TailwindCSS，提供完整的开发到生产流程，你可以通过Hexo根目录的`tailwind.config.js` 来配置自定义主题和样式。
 
 ### 组件样式
 
-支持在模板中直接使用 TailwindCSS 类：
+支持在模板中直接使用 TailwindCSS 样式类：
 
 ```ejs
 <!-- layout/post.ejs -->
@@ -284,23 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 ```
-
-### 模块导入
-
-```javascript
-// layout/components/main.js
-import { Gallery } from './gallery/gallery.js';
-import { Navigation } from './navigation/navigation.js';
-import { ThemeToggle } from './theme-toggle/theme-toggle.js';
-
-// 全局初始化
-window.ThemeComponents = {
-  Gallery,
-  Navigation,
-  ThemeToggle
-};
-```
-
 ## 🔍 调试与监控
 
 ### 调试模式
@@ -365,27 +310,11 @@ theme_builder:
        └── theme-toggle.css
    ```
 
-### 🛡️ 错误处理
-
-1. **资源加载失败**
-   ```javascript
-   // 组件中添加降级处理
-   try {
-     await import('./advanced-feature.js');
-   } catch (error) {
-     console.warn('高级功能加载失败，使用基础功能');
-     await import('./basic-feature.js');
-   }
-   ```
-
-2. **样式缺失处理**
-   ```ejs
-   <!-- 模板中添加样式回退 -->
-   <%- load_theme_assets() %>
-   <noscript>
-     <link rel="stylesheet" href="/css/fallback.css">
-   </noscript>
-   ```
+### 🛡️ 集成到主题
+主需要在你的Hexo现有主题的 html head 标签内引入下列助手代码，Goose Builder 会在生成页面时自动完成依赖注入：
+```ejs
+<%- load_theme_assets() %>
+```
 
 ## 🔧 故障排除
 
@@ -462,11 +391,9 @@ hexo server
 
 ## 📄 许可证
 
-[MIT License](LICENSE) © 2024 [Travis Tang](https://github.com/Travisun)
+[MIT License](LICENSE) © 2025 [Travis Tang](https://github.com/Travisun)
 
----
-
-<div align="center">
+<div align="center" style="background-color: #f0f0f0;padding: 10px;border-radius: 5px;">
 
 **⭐ 如果这个项目对你有帮助，请给一个 Star！**
 
