@@ -199,7 +199,7 @@ class ThemeBuilder {
 
       // 先编译 CSS，因为 JS 可能依赖于生成的样式类
       this.logInfo(`编译 TailwindCSS（${this.currentMode}模式）...`);
-      const cssOutputPath = await this.tailwindCompiler.compile();
+      const cssOutputPath = await this.tailwindCompiler.compile({ skipClean: false });
       if (cssOutputPath) {
                   this.logDebug(`TailwindCSS编译完成（${this.currentMode}模式）`);
         
@@ -208,7 +208,7 @@ class ThemeBuilder {
         
         // 再编译 JS
         this.logInfo(`编译 JS组件（${this.currentMode}模式）...`);
-        const bundleResult = await this.jsBundler.bundle();
+        const bundleResult = await this.jsBundler.bundle({ skipClean: false });
         if (bundleResult) {
                       this.logDebug(`JS组件打包完成（${this.currentMode}模式）`);
         } else {
@@ -237,6 +237,96 @@ class ThemeBuilder {
       this.banner.showError(this.currentMode, '资源编译失败');
       this.logError(`资源编译失败（${this.currentMode}模式）:`, error);
       this.hasCompiled = false;
+      throw error; // 重新抛出错误供调用者处理
+    } finally {
+      this.isCompiling = false;
+    }
+  }
+
+  // 仅编译CSS资源
+  async compileCSSOnly() {
+    // 防止重复编译
+    if (this.isCompiling) {
+      this.logDebug(`编译正在进行中（${this.currentMode}模式），等待完成...`);
+      // 等待当前编译完成
+      while (this.isCompiling) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return this.hasCompiled;
+    }
+
+    this.isCompiling = true;
+    this.logInfo(`开始编译CSS资源（${this.currentMode}模式）...`);
+    
+    try {
+      // 检查主题目录是否存在
+      if (!fs.existsSync(this.hexo.theme_dir)) {
+        throw new Error(`主题目录不存在: ${this.hexo.theme_dir}`);
+      }
+
+      // 编译 TailwindCSS（由TailwindCompiler自己处理CSS文件清理）
+      this.logInfo(`编译 TailwindCSS（${this.currentMode}模式）...`);
+      const cssOutputPath = await this.tailwindCompiler.compile({ skipClean: false });
+      
+      if (cssOutputPath) {
+        this.logDebug(`TailwindCSS编译完成（${this.currentMode}模式）`);
+        this.logSuccess(`CSS编译完成: ${path.relative(this.hexo.theme_dir, cssOutputPath)}`);
+      } else {
+        this.logWarning(`TailwindCSS编译未成功（${this.currentMode}模式）`);
+        return false;
+      }
+
+      // 更新编译状态（部分编译）
+      this.hasCompiled = true;
+      
+      return true;
+    } catch (error) {
+      this.logError(`CSS编译失败（${this.currentMode}模式）:`, error);
+      throw error; // 重新抛出错误供调用者处理
+    } finally {
+      this.isCompiling = false;
+    }
+  }
+
+  // 仅编译JS资源
+  async compileJSOnly() {
+    // 防止重复编译
+    if (this.isCompiling) {
+      this.logDebug(`编译正在进行中（${this.currentMode}模式），等待完成...`);
+      // 等待当前编译完成
+      while (this.isCompiling) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return this.hasCompiled;
+    }
+
+    this.isCompiling = true;
+    this.logInfo(`开始编译JS资源（${this.currentMode}模式）...`);
+    
+    try {
+      // 检查主题目录是否存在
+      if (!fs.existsSync(this.hexo.theme_dir)) {
+        throw new Error(`主题目录不存在: ${this.hexo.theme_dir}`);
+      }
+
+      // 编译 JS组件（由JSBundler自己处理JS文件清理）
+      this.logInfo(`编译 JS组件（${this.currentMode}模式）...`);
+      const bundleResult = await this.jsBundler.bundle({ skipClean: false });
+      
+      if (bundleResult) {
+        this.logDebug(`JS组件打包完成（${this.currentMode}模式）`);
+        this.logSuccess(`JS编译完成`);
+      } else {
+        this.logWarning(`JS组件打包未成功（${this.currentMode}模式）`);
+        return false;
+      }
+
+      // 更新编译状态（部分编译）
+      this.hasCompiled = true;
+      
+      return true;
+    } catch (error) {
+      this.logError(`JS编译失败（${this.currentMode}模式）:`, error);
       throw error; // 重新抛出错误供调用者处理
     } finally {
       this.isCompiling = false;
@@ -302,8 +392,18 @@ class ThemeBuilder {
   }
 
   // 清理编译缓存
-  clearCompileCache() {
-    this.logInfo(`正在清理编译缓存（${this.currentMode}模式）...`);
+  clearCompileCache(options = {}) {
+    const { cssOnly = false, jsOnly = false } = options;
+    
+    if (cssOnly && jsOnly) {
+      throw new Error('不能同时指定 cssOnly 和 jsOnly');
+    }
+    
+    let cacheType = '所有';
+    if (cssOnly) cacheType = 'CSS';
+    if (jsOnly) cacheType = 'JS';
+    
+    this.logInfo(`正在清理${cacheType}编译缓存（${this.currentMode}模式）...`);
     
     try {
       const themeSourceDir = path.join(this.hexo.theme_dir, 'source');
@@ -313,7 +413,7 @@ class ThemeBuilder {
       let clearedCount = 0;
       
       // 清理CSS编译文件
-      if (fs.existsSync(cssDir)) {
+      if (!jsOnly && fs.existsSync(cssDir)) {
         const cssFiles = fs.readdirSync(cssDir);
         const compiledCssFiles = cssFiles.filter(file => {
           return (
@@ -334,7 +434,7 @@ class ThemeBuilder {
       }
       
       // 清理JS编译文件
-      if (fs.existsSync(jsDir)) {
+      if (!cssOnly && fs.existsSync(jsDir)) {
         const jsFiles = fs.readdirSync(jsDir);
         const compiledJsFiles = jsFiles.filter(file => {
           return file.startsWith('components.') && file.endsWith('.js');
@@ -348,24 +448,26 @@ class ThemeBuilder {
             clearedCount++;
           }
         });
+        
+        // 清理组件manifest文件
+        const manifestPath = path.join(jsDir, 'components.manifest.json');
+        if (fs.existsSync(manifestPath)) {
+          fs.unlinkSync(manifestPath);
+          this.logDebug(`已删除组件manifest文件`);
+          clearedCount++;
+        }
       }
       
-      // 清理组件manifest文件
-      const manifestPath = path.join(jsDir, 'components.manifest.json');
-      if (fs.existsSync(manifestPath)) {
-        fs.unlinkSync(manifestPath);
-        this.logDebug(`已删除组件manifest文件`);
-        clearedCount++;
-      }
-      
-      // 重置编译状态
-      this.hasCompiled = false;
-      this.isCompiling = false;
-      
-      // 清除编译定时器
-      if (this.compileDebounceTimer) {
-        clearTimeout(this.compileDebounceTimer);
-        this.compileDebounceTimer = null;
+      // 重置编译状态（仅在完全清理时）
+      if (!cssOnly && !jsOnly) {
+        this.hasCompiled = false;
+        this.isCompiling = false;
+        
+        // 清除编译定时器
+        if (this.compileDebounceTimer) {
+          clearTimeout(this.compileDebounceTimer);
+          this.compileDebounceTimer = null;
+        }
       }
       
               // 为不同模式提供不同的完成信息
