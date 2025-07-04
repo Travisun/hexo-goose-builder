@@ -247,7 +247,10 @@ class ThemeBuilder {
   }
 
   // 仅编译CSS资源
-  async compileCSSOnly() {
+  async compileCSSOnly(options = {}) {
+    this.logInfo(`📥 compileCSSOnly调用，参数: ${JSON.stringify(options)}`);
+    this.logInfo(`🔍 原始forceRecompile参数: ${options.forceRecompile}`);
+    
     // 防止重复编译
     if (this.isCompiling) {
       this.logDebug(`编译正在进行中（${this.currentMode}模式），等待完成...`);
@@ -269,10 +272,20 @@ class ThemeBuilder {
 
       // 编译 TailwindCSS（由TailwindCompiler自己处理CSS文件清理）
       this.logInfo(`编译 TailwindCSS（${this.currentMode}模式）...`);
-      const cssOutputPath = await this.tailwindCompiler.compile({ 
+      const compileOptions = { 
         skipClean: false, 
-        forceRecompile: true  // CSS编译策略需要强制重新编译
-      });
+        forceRecompile: options.forceRecompile || true  // 默认强制重新编译，可通过参数覆盖
+      };
+      
+      this.logInfo(`🔧 最终compileOptions: ${JSON.stringify(compileOptions)}`);
+      this.logInfo(`🔧 最终forceRecompile值: ${compileOptions.forceRecompile}`);
+      
+      if (compileOptions.forceRecompile) {
+        this.logInfo(`🔄 启用强制重新编译CSS（包括组件样式文件）`);
+      }
+      
+      this.logInfo(`📞 调用TailwindCompiler.compile，参数: ${JSON.stringify(compileOptions)}`);
+      const cssOutputPath = await this.tailwindCompiler.compile(compileOptions);
       
       if (cssOutputPath) {
         this.logDebug(`TailwindCSS编译完成（${this.currentMode}模式）`);
@@ -295,7 +308,7 @@ class ThemeBuilder {
   }
 
   // 仅编译JS资源
-  async compileJSOnly() {
+  async compileJSOnly(options = {}) {
     // 防止重复编译
     if (this.isCompiling) {
       this.logDebug(`编译正在进行中（${this.currentMode}模式），等待完成...`);
