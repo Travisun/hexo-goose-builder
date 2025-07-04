@@ -812,40 +812,89 @@ hexo.extend.helper.register('load_theme_assets', () => {
 const tailwindInitCommand = require('./lib/commands/tailwind-init');
 const themeExportCommand = require('./lib/commands/theme-export');
 
+// 帮助信息函数
+function showDetailedHelp() {
+  console.log(chalk.blue.bold('\n🦢 Hexo Goose Builder - 主题构建器工具\n'));
+  
+  console.log(chalk.yellow('用法:'));
+  console.log('  hexo goose <subcommand> [arguments] [options]\n');
+  
+  console.log(chalk.yellow('描述:'));
+  console.log('  强大的 Hexo 主题开发和构建工具，支持 TailwindCSS 和组件化开发\n');
+  
+  console.log(chalk.yellow('可用的子命令:\n'));
+  
+  // TailwindCSS 初始化命令
+  console.log(chalk.green.bold('  tailwind-init'));
+  console.log(chalk.gray('    初始化 TailwindCSS 配置文件和目录结构'));
+  console.log(chalk.gray('    用法: hexo goose tailwind-init'));
+  console.log(chalk.gray('    说明: 创建 tailwind.css 默认配置文件'));
+  console.log('');
+  
+  // 主题导出命令
+  console.log(chalk.green.bold('  theme-export [theme_name]'));
+  console.log(chalk.gray('    导出开发完成的主题为可发布的包'));
+  console.log(chalk.gray('    用法:'));
+  console.log(chalk.gray('      hexo goose theme-export              # 导出配置文件中的默认主题'));
+  console.log(chalk.gray('      hexo goose theme-export jiangyu      # 导出指定名称的主题'));
+  console.log(chalk.gray('    功能:'));
+  console.log(chalk.gray('      • 复制核心目录 (layout/, source/, languages/, scripts/)'));
+  console.log(chalk.gray('      • 智能处理组件目录 (仅复制 .ejs 模板文件)'));
+  console.log(chalk.gray('      • 替换资源引用 (<%- load_theme_assets() %> → 实际标签)'));
+  console.log(chalk.gray('      • 打包为带时间戳的 .zip 文件'));
+  console.log('');
+  
+  console.log(chalk.yellow('全局选项:'));
+  console.log(chalk.gray('  -h, --help    显示此帮助信息'));
+  console.log('');
+  
+  console.log(chalk.yellow('示例:'));
+  console.log(chalk.gray('  # 初始化 TailwindCSS'));
+  console.log(chalk.cyan('  hexo goose tailwind-init'));
+  console.log('');
+  console.log(chalk.gray('  # 导出默认主题'));
+  console.log(chalk.cyan('  hexo goose theme-export'));
+  console.log('');
+  console.log(chalk.gray('  # 导出指定主题'));
+  console.log(chalk.cyan('  hexo goose theme-export my-theme'));
+  console.log('');
+  
+  console.log(chalk.yellow('更多信息:'));
+  console.log(chalk.gray('  GitHub: https://github.com/Travisun/hexo-goose-builder'));
+  console.log(chalk.gray('  文档: https://investravis.com'));
+  console.log('');
+}
+
 hexo.extend.console.register('goose', 'Hexo Goose Builder 工具命令', {
   usage: '<subcommand> [arguments] [options]',
-  desc: '主题构建器工具命令集',
+  desc: '🦢 Hexo Goose Builder, 使用 help 查看详细帮助信息',
   arguments: [
-    { name: 'subcommand', desc: '子命令 (如: tailwind-init, theme-export)' },
+    { name: 'subcommand', desc: '子命令 (tailwind-init, theme-export， help)' },
     { name: 'arguments', desc: '子命令参数 (可选)' }
   ],
   options: [
-    { name: '-h, --help', desc: '显示帮助信息' }
+    { name: '-h, --help', desc: '显示详细帮助信息'}
   ]
 }, function(args) {
+  console.log(chalk.gray(`[DEBUG] 参数结构: ${JSON.stringify(args._[1], null, 2)}`));
   const subcommand = args._[0];
+  
+  // 检查是否请求帮助信息
+  if (args.help || args.h || !subcommand) {
+    showDetailedHelp();
+    return;
+  }
   
   switch (subcommand) {
     case 'tailwind-init':
       return tailwindInitCommand(args);
+      
     case 'theme-export':
-      // 正确解析theme-export的参数
-      // args._ 的结构通常是: ['goose', 'theme-export', ...userArgs]
-      const userArgs = args._.slice(2); // 跳过 'goose' 和 'theme-export'
-      const exportArgs = {
-        _: userArgs,
-        ...args
-      };
-      return themeExportCommand.call(this, exportArgs);
+      return themeExportCommand.call(this, args);
+      
     default:
-      console.log('可用的子命令:');
-      console.log('  tailwind-init           - 初始化 Tailwind CSS 配置');
-      console.log('  theme-export [theme]    - 导出开发完成的主题');
-      console.log('');
-      console.log('用法: hexo goose <subcommand> [arguments]');
-      console.log('例如: hexo goose tailwind-init');
-      console.log('例如: hexo goose theme-export           # 导出配置文件中的默认主题');
-      console.log('例如: hexo goose theme-export landscape # 导出指定的主题');
+      console.log(chalk.red(`❌ 未知的子命令: ${subcommand}\n`));
+      showDetailedHelp();
       break;
   }
 });
