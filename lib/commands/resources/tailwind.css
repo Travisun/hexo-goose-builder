@@ -1,0 +1,48 @@
+/* 这里是主要的Tailwindcss4的配置文件
+   其它主题组件的样式会自动导入，你无需手动导入 
+   自定义你的主题样式和制定主题变量应该在此完成
+*/
+/* 导入基本样式支持 */
+@import "tailwindcss";
+
+/* 根据需求是否导入 typography 插件，此插件可以帮助你快速排版排版 */
+/* 文档请参考 https://github.com/tailwindlabs/tailwindcss-typography */
+/* 开启后需要在你的需要排版的地方添加 class="prose" 即可，更多用法请参考文档 */
+/* @plugin "@tailwindcss/typography"; */
+
+/* 定义主题变量 */
+@theme {
+    /* === 继承默认配置，只覆盖需要自定义的部分 === */
+    /* 根据你的实际风格和设计再此层定义Tailwindcss4的变量 */
+    /* 主题定制的文档请参考 https://tailwindcss.com/docs/theme */
+    /* --color-primary-50: var(--color-red-50);
+    --color-primary-100: var(--color-red-100);
+    --color-primary-200: var(--color-red-200);
+    --color-primary-300: var(--color-red-300);
+    --color-primary-400: var(--color-red-400);
+    --color-primary-500: var(--color-red-500);
+    --color-primary-600: var(--color-red-600); */
+}
+
+@layer base {
+    /* 在此定义一些全局可用的样式，或者覆盖默认的基本样式 */
+    /* body, html {
+        font-family: var(--font-body);
+        font-weight: var(--font-weight-normal) !important;
+    } */
+}
+
+/* 在这里还可以添加或覆盖其他命名空间的样式 */
+/* 例如：@layer components {
+    .your-class {
+        @apply bg-red-500;
+    }
+} */
+
+
+/* 如果你还有其他自定义的文件需要导入，请在这里导入使用 */
+/* 自定义CSS文件不要放在主题目录的 source 目录下，因为该目录不在编译范围内 */
+/* 你可以在主题目录下的layout目录内创建一个css文件，或者layout的子目录内创建一个自定义
+   样式的CSS文件，然后再导入。
+*/
+/* 例如：@import "child-folder_theme_root/custom.css"; */

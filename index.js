@@ -804,3 +804,31 @@ hexo.extend.helper.register('load_theme_assets', () => {
   
   return tags.join('\n');
 });
+
+// 注册console命令
+const tailwindInitCommand = require('./lib/commands/tailwind-init');
+
+hexo.extend.console.register('goose', 'Hexo Goose Builder 工具命令', {
+  usage: '<subcommand> [options]',
+  desc: '主题构建器工具命令集',
+  arguments: [
+    { name: 'subcommand', desc: '子命令 (如: tailwind-init)' }
+  ],
+  options: [
+    { name: '-h, --help', desc: '显示帮助信息' }
+  ]
+}, function(args) {
+  const subcommand = args._[0];
+  
+  switch (subcommand) {
+    case 'tailwind-init':
+      return tailwindInitCommand(args);
+    default:
+      console.log('可用的子命令:');
+      console.log('  tailwind-init  - 初始化 Tailwind CSS 配置');
+      console.log('');
+      console.log('用法: hexo goose <subcommand>');
+      console.log('例如: hexo goose tailwind-init');
+      break;
+  }
+});
