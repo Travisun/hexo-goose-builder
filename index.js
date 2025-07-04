@@ -679,16 +679,16 @@ hexo.extend.helper.register('load_theme_assets', () => {
     notification.innerHTML = message || '页面正在重新加载...';
     notification.style.cssText = \`
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: 0px;
+      right: 0px;
       background: #4CAF50;
       color: white;
-      padding: 12px 20px;
-      border-radius: 4px;
+      padding: 5px 15px;
+      border-radius: 2px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       z-index: 10000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 14px;
+      font-family: "Lato","Arial","Tahoma","Verdana",ui-sans-serif,system-ui,sans-serif;
+      font-size: .8rem;
       transition: all 0.3s ease;
     \`;
     
