@@ -199,7 +199,10 @@ class ThemeBuilder {
 
       // 先编译 CSS，因为 JS 可能依赖于生成的样式类
       this.logInfo(`编译 TailwindCSS（${this.currentMode}模式）...`);
-      const cssOutputPath = await this.tailwindCompiler.compile({ skipClean: false });
+      const cssOutputPath = await this.tailwindCompiler.compile({ 
+        skipClean: false, 
+        forceRecompile: true  // 完整编译策略强制重新编译确保最新状态
+      });
       if (cssOutputPath) {
                   this.logDebug(`TailwindCSS编译完成（${this.currentMode}模式）`);
         
@@ -256,7 +259,7 @@ class ThemeBuilder {
     }
 
     this.isCompiling = true;
-    this.logInfo(`开始编译CSS资源（${this.currentMode}模式）...`);
+    this.logInfo(`🎨 开始编译CSS资源（${this.currentMode}模式）...`);
     
     try {
       // 检查主题目录是否存在
@@ -266,7 +269,10 @@ class ThemeBuilder {
 
       // 编译 TailwindCSS（由TailwindCompiler自己处理CSS文件清理）
       this.logInfo(`编译 TailwindCSS（${this.currentMode}模式）...`);
-      const cssOutputPath = await this.tailwindCompiler.compile({ skipClean: false });
+      const cssOutputPath = await this.tailwindCompiler.compile({ 
+        skipClean: false, 
+        forceRecompile: true  // CSS编译策略需要强制重新编译
+      });
       
       if (cssOutputPath) {
         this.logDebug(`TailwindCSS编译完成（${this.currentMode}模式）`);
@@ -301,7 +307,7 @@ class ThemeBuilder {
     }
 
     this.isCompiling = true;
-    this.logInfo(`开始编译JS资源（${this.currentMode}模式）...`);
+    this.logInfo(`🔧 开始编译JS资源（${this.currentMode}模式）...`);
     
     try {
       // 检查主题目录是否存在
@@ -504,16 +510,16 @@ class ThemeBuilder {
     });
 
     // 在Hexo退出时清理资源
-    this.hexo.on('exit', () => {
+    this.hexo.on('exit', async () => {
       if (this.modeHandler && typeof this.modeHandler.cleanup === 'function') {
-        this.modeHandler.cleanup();
+        await this.modeHandler.cleanup();
       }
     });
 
     // 处理进程信号
-    const handleExit = () => {
+    const handleExit = async () => {
       if (this.modeHandler && typeof this.modeHandler.cleanup === 'function') {
-        this.modeHandler.cleanup();
+        await this.modeHandler.cleanup();
       }
       process.exit(0);
     };
@@ -620,5 +626,168 @@ const themeBuilder = new ThemeBuilder(hexo);
 
 // 注册helper用于加载主题资源
 hexo.extend.helper.register('load_theme_assets', () => {
-  return themeBuilder.getAssetTags().join('\n');
+  const tags = themeBuilder.getAssetTags();
+  
+  // 在服务器模式下自动添加热重载客户端代码
+  if (themeBuilder.isServerMode() && themeBuilder.modeHandler) {
+    const socketInfo = themeBuilder.modeHandler.getSocketConnectionInfo();
+    if (socketInfo.isRunning) {
+      // 生成Socket.IO客户端代码
+      const hotReloadClient = `
+<!-- Theme Builder 热重载客户端 -->
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script>
+(function() {
+  'use strict';
+  
+  // 热重载客户端配置
+  const config = {
+    socketPort: ${socketInfo.port},
+    reconnectDelay: 2000,
+    maxReconnectAttempts: 10,
+    debug: ${themeBuilder.isDebugEnabledSafe()}
+  };
+  
+  let socket = null;
+  let reconnectAttempts = 0;
+  let isReloading = false;
+  
+  // 日志函数
+  function log(message, type = 'info') {
+    if (config.debug) {
+      const prefix = '[Theme Builder Hot Reload]';
+      switch (type) {
+        case 'error':
+          console.error(prefix, message);
+          break;
+        case 'warn':
+          console.warn(prefix, message);
+          break;
+        case 'success':
+          console.log('%c' + prefix + ' ' + message, 'color: #4CAF50');
+          break;
+        default:
+          console.log('%c' + prefix + ' ' + message, 'color: #2196F3');
+      }
+    }
+  }
+  
+  // 显示重载通知
+  function showReloadNotification(message) {
+    // 创建通知元素
+    const notification = document.createElement('div');
+    notification.innerHTML = message || '页面正在重新加载...';
+    notification.style.cssText = \`
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    \`;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒后自动移除通知
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }
+    }, 3000);
+  }
+  
+  // 连接Socket.IO服务器
+  function connectSocket() {
+    try {
+      log('尝试连接热重载服务...');
+      
+      socket = io(\`http://localhost:\${config.socketPort}\`, {
+        transports: ['websocket', 'polling'],
+        timeout: 5000,
+        forceNew: true
+      });
+      
+      socket.on('connect', function() {
+        reconnectAttempts = 0;
+        log('热重载服务连接成功', 'success');
+      });
+      
+      socket.on('connected', function(data) {
+        log(data.message || '已连接到热重载服务', 'success');
+      });
+      
+      socket.on('theme_reload', function(data) {
+        if (isReloading) return;
+        isReloading = true;
+        
+        log('收到重载通知: ' + (data.message || '资源已更新'), 'success');
+        
+        // 显示通知
+        showReloadNotification(data.message);
+        
+        // 延迟重载，给用户看到通知的时间
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      });
+      
+      socket.on('server_shutdown', function(data) {
+        log('服务器即将关闭: ' + (data.message || ''), 'warn');
+      });
+      
+      socket.on('disconnect', function(reason) {
+        log('热重载服务连接断开: ' + reason, 'warn');
+        
+        // 如果不是客户端主动断开，尝试重连
+        if (reason !== 'io client disconnect' && reconnectAttempts < config.maxReconnectAttempts) {
+          setTimeout(() => {
+            reconnectAttempts++;
+            log(\`尝试重连 (\${reconnectAttempts}/\${config.maxReconnectAttempts})...\`);
+            connectSocket();
+          }, config.reconnectDelay);
+        }
+      });
+      
+      socket.on('connect_error', function(error) {
+        log('连接错误: ' + error.message, 'error');
+      });
+      
+    } catch (error) {
+      log('初始化Socket连接失败: ' + error.message, 'error');
+    }
+  }
+  
+  // 页面加载完成后连接
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', connectSocket);
+  } else {
+    connectSocket();
+  }
+  
+  // 页面卸载时断开连接
+  window.addEventListener('beforeunload', function() {
+    if (socket) {
+      socket.disconnect();
+    }
+  });
+  
+})();
+</script>`;
+      
+      tags.push(hotReloadClient);
+    }
+  }
+  
+  return tags.join('\n');
 });
