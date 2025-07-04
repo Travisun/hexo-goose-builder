@@ -53,6 +53,7 @@
         "@rollup/plugin-commonjs": "^28.0.6",
         "@rollup/plugin-node-resolve": "^16.0.1",
         "@tailwindcss/postcss": "^4.1.11",
+        "@tailwindcss/typography": "^0.5.0 || ~0.5.0-alpha",
         "autoprefixer": "^10.4.21",
         "chalk": "^4.1.2",
         "chokidar": "^3.6.0",

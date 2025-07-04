@@ -637,6 +637,9 @@ class ThemeBuilder {
 // 创建主题构建器实例
 const themeBuilder = new ThemeBuilder(hexo);
 
+// 将实例添加到 hexo 对象中供其他模块使用
+hexo.goose_builder = themeBuilder;
+
 // 注册helper用于加载主题资源
 hexo.extend.helper.register('load_theme_assets', () => {
   const tags = themeBuilder.getAssetTags();
@@ -807,12 +810,14 @@ hexo.extend.helper.register('load_theme_assets', () => {
 
 // 注册console命令
 const tailwindInitCommand = require('./lib/commands/tailwind-init');
+const themeExportCommand = require('./lib/commands/theme-export');
 
 hexo.extend.console.register('goose', 'Hexo Goose Builder 工具命令', {
-  usage: '<subcommand> [options]',
+  usage: '<subcommand> [arguments] [options]',
   desc: '主题构建器工具命令集',
   arguments: [
-    { name: 'subcommand', desc: '子命令 (如: tailwind-init)' }
+    { name: 'subcommand', desc: '子命令 (如: tailwind-init, theme-export)' },
+    { name: 'arguments', desc: '子命令参数 (可选)' }
   ],
   options: [
     { name: '-h, --help', desc: '显示帮助信息' }
@@ -823,12 +828,24 @@ hexo.extend.console.register('goose', 'Hexo Goose Builder 工具命令', {
   switch (subcommand) {
     case 'tailwind-init':
       return tailwindInitCommand(args);
+    case 'theme-export':
+      // 正确解析theme-export的参数
+      // args._ 的结构通常是: ['goose', 'theme-export', ...userArgs]
+      const userArgs = args._.slice(2); // 跳过 'goose' 和 'theme-export'
+      const exportArgs = {
+        _: userArgs,
+        ...args
+      };
+      return themeExportCommand.call(this, exportArgs);
     default:
       console.log('可用的子命令:');
-      console.log('  tailwind-init  - 初始化 Tailwind CSS 配置');
+      console.log('  tailwind-init           - 初始化 Tailwind CSS 配置');
+      console.log('  theme-export [theme]    - 导出开发完成的主题');
       console.log('');
-      console.log('用法: hexo goose <subcommand>');
+      console.log('用法: hexo goose <subcommand> [arguments]');
       console.log('例如: hexo goose tailwind-init');
+      console.log('例如: hexo goose theme-export           # 导出配置文件中的默认主题');
+      console.log('例如: hexo goose theme-export landscape # 导出指定的主题');
       break;
   }
 });
